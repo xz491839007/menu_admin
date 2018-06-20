@@ -35,7 +35,8 @@
                  :data="tableData"
                  border
                  highlight-current-row
-                 style="width:100%">
+                 style="width:100%"
+                 row-key="id">
                 <el-table-column
                    prop="id"
                    label="序号"
@@ -78,18 +79,6 @@
                    width="180"
                    align='center'>
                 </el-table-column>
-                <el-table-column
-                   property="createTime"
-                   label="注册时间"
-                   width="180"
-                   align='center'>
-                </el-table-column>
-                <el-table-column
-                   property="updateTime"
-                   label="登录时间"
-                   width="180"
-                   align='center'>
-                </el-table-column>
                  <el-table-column
                    property="role"
                    label="角色"
@@ -113,7 +102,8 @@
                 align='center'
                 label="操作"
                 fixed="right"
-                width="270">
+                width="180"
+                >
                 <template slot-scope='scope'>
                   <el-button
                     type="warning"
@@ -121,17 +111,21 @@
                     size="small"
                     @click='onEditAdmin(scope.row)'
                   >编辑</el-button>
-                  <el-button type="warning"
-                             icon='edit'
-                             size="small"
-                             @click='onEditAdmin(scope.row)'
-                  >拉黑</el-button>
                   <el-button
                     type="danger"
                     icon='delete'
                     size="small"
                     @click='onDelAdmin(scope.row,scope.$index)'
+                    v-if="scope.row.del_type === '正常'"
                   >删除</el-button>
+                  <!-- 这里是一个日志点！ -->
+                  <el-button
+                    type="success"
+                    icon='delete'
+                    size="small"
+                    @click='onRecoveAdmin(scope.row,scope.$index)'
+                    v-if="scope.row.del_type === '已删除'"
+                  >恢复</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -214,7 +208,7 @@
 
 <script>
 // import mutils from '@/utils/mUtils'
-import {queryadmin, initAdmin} from '@/api/admin'
+import {queryadmin, initAdmin, editAdmin} from '@/api/admin'
 import BIN from 'bankcardinfo'
 
 export default {
@@ -307,7 +301,6 @@ export default {
       }
       queryadmin(data).then((response, error) => {
         if (response.data.status === 1) {
-          console.log(response)
           let data = response.data
           let pages = data.page
           this.paginations.total = pages.total
@@ -333,6 +326,8 @@ export default {
               shopId: item.shopId,
               image: item.image,
               name: item.name,
+              card_no: item.card_no,
+              card_type: item.card_type,
               gender: item.gender,
               version: item.version,
               del_type: delType
@@ -350,7 +345,6 @@ export default {
     },
     // 每页多少条切换
     handleSizeChange (pageSize) {
-      console.log(`每页 ${pageSize} 条`)
       this.getList({
         pageSize
       })
@@ -407,7 +401,20 @@ export default {
       // 点击提交代码
       console.log(form)
       if (form.id) {
+        let datas = {
+          type: 1,
+          data: form
+        }
         // 修改个人信息
+        editAdmin(datas).then((response) => {
+          if (response.data.status === 1) {
+            this.dialog.show = false
+            let page = 1
+            this.getList({page})
+          } else {
+            alert(response.data.msg)
+          }
+        })
       } else {
         // 添加个人信息
         initAdmin(form).then((response) => {
@@ -430,14 +437,61 @@ export default {
       this.form.password = row.password
       this.form.email = row.email
       this.form.name = row.name
+      // 卡类型
       this.form.card_type = row.card_type
+      // 卡账号
       this.form.card_no = row.card_no
-      this.form.gender = row.gender
+      if (row.gender === 1) {
+        this.form.gender = 1
+      } else if (row.gender === 2) {
+        this.form.gender = 2
+      }
       this.dialog.title = '修改用户信息'
       this.dialog.show = true
     },
     onDelAdmin (row) {
-
+      this.$confirm('确认删除此用户？')
+        .then(_ => {
+          let datas = {
+            type: 2,
+            userId: row.id
+          }
+          // 删除id
+          editAdmin(datas).then((response) => {
+            if (response.data.status === 1) {
+              this.$message({
+                showClose: true,
+                message: '删除了该用户',
+                type: 'success'
+              })
+              let page = 1
+              this.getList({page})
+            }
+          })
+        })
+        .catch(_ => {})
+    },
+    onRecoveAdmin (row) {
+      this.$confirm('确认恢复此用户？')
+        .then(_ => {
+          let datas = {
+            type: 3,
+            userId: row.id
+          }
+          // 删除id
+          editAdmin(datas).then((response) => {
+            if (response.data.status === 1) {
+              this.$message({
+                showClose: true,
+                message: '恢复了该用户',
+                type: 'success'
+              })
+              let page = 1
+              this.getList({page})
+            }
+          })
+        })
+        .catch(_ => {})
     }
   }
 }

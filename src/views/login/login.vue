@@ -80,7 +80,7 @@ export default {
       const menuData = [
         {
           path: '/index',
-          name: '首页',
+          name: '数据管理',
           component: 'index',
           icon: 'fa-server',
           noDropdown: true,
@@ -90,7 +90,7 @@ export default {
         },
         {
           path: '/userList',
-          name: '用户列表',
+          name: '用户管理',
           component: 'userList',
           icon: 'fa-user',
           noDropdown: true,
@@ -99,7 +99,7 @@ export default {
           ]
         },
         {path: '/shopList',
-          name: '商户列表',
+          name: '商户管理',
           component: 'shopList',
           icon: 'fa-envelope',
           noDropdown: true,

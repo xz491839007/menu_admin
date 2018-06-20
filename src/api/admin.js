@@ -17,3 +17,12 @@ export const initAdmin = (data) => {
   req.url = 'api/addadmin'
   return _post(req)
 }
+
+// 修改管理员的信息
+export const editAdmin = (data) => {
+  let req = {
+    data: data
+  }
+  req.url = 'api/editadmin'
+  return _post(req)
+}
